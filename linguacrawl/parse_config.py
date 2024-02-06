@@ -29,7 +29,9 @@ def validate_config(config):
         'mandatory_lang': {'required': False, 'type': 'string', 'default': None, 'nullable': True},
         'min_percent_mandatory_lang': {'required': False, 'type': 'integer', 'default': 10},
         'url_blacklist': {'required': False, 'type': 'list', 'default': []},
-        'custom_fasttext_langid': {'required': False, 'type': 'string', 'default': None, 'nullable': True}
+        'custom_fasttext_langid': {'required': False, 'type': 'string', 'default': None, 'nullable': True},
+        # TODO describe option in the documentation
+        'shuffle_urls_in_documents': {'required': False, 'type': 'boolean', 'default': True},
     }
 
     v = Validator(schema)

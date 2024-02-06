@@ -61,14 +61,15 @@ class WebDocument(object):
             absolute = True
         return absolute
 
-    def get_link_set(self):
+    def get_link_set(self, shuffle_urls=True):
         if self.successfully_read and self.links is None:
             extracted_links = re.findall(r"href\s*=\s*['\"]\s*([^'\"]+)['\"]", self.utf_text)
             for idx, link in enumerate(extracted_links):
                 if not self.is_url_absolute(link):
                     # Resolve relative URL
                     extracted_links[idx] = urljoin(str(self.url), link)
-            self.links = [Link(link, self.url) for link in set(extracted_links)]
+            # if shuffle_urls is False, the crawling will be breadth-first search (i.e. common approach)
+            self.links = [Link(link, self.url) for link in (extracted_links if shuffle_urls else set(extracted_links))]
         return self.links
 
     def get_lang(self):

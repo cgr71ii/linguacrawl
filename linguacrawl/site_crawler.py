@@ -125,6 +125,9 @@ class SiteCrawler(object):
         # Times a link is unsuccessfully fetched
         self.fails_fetch_url = 0
 
+        # Breadth-first search crawling or shuffle URLs
+        self.shuffle_urls_in_documents = config["shuffle_urls_in_documents"]
+
     def extend_url_list(self, url_list):
         for u in url_list:
             self.add_url_to_list(u)
@@ -296,7 +299,7 @@ class SiteCrawler(object):
                                 logging.info("Thread %s: %s document does not content text or could not be converted into UTF", threading.current_thread().name, url.get_norm_url())
                             else:
                                 logging.info("Thread %s: %s document contains text", threading.current_thread().name, url.get_norm_url())
-                                links_set = doc.get_link_set()
+                                links_set = doc.get_link_set(shuffle_urls=self.shuffle_urls_in_documents)
                                 # We can shuffle links to avoid to get biased by the structure of the site
                                 # random.shuffle(linksset)
                                 listoflinks = []
