@@ -11,7 +11,7 @@ class Link(object):
 
     def __init__(self, link, in_url=None):
         if link is not None:
-            self.original_link = re.sub(r'#[^#]*$', '', link)
+            self.original_link = re.sub(r'#.*$', '', link)
         else:
             self.original_link = ""
         self._norm_url = None
