@@ -7,17 +7,20 @@ import pickle
 import re
 import sys
 import time
-from .site_robots import SiteRobots
+from linguacrawl.site_robots import SiteRobots
 from threading import Thread, Lock
 from warcio.statusandheaders import StatusAndHeaders
 from warcio.warcwriter import WARCWriter
-from .web_document import WebDocument
-from .link import Link
+from linguacrawl.web_document import WebDocument
+from linguacrawl.link import Link
 import os.path
 import socket
 import ssl
 import gzip
 import threading
+
+from linguacrawl.pending_urls_queue import PendingURLsQueue
+
 # SET THE SEED FOR REPRODUCIBILITY TESTS
 # SEED=4
 # random.seed(SEED)
@@ -93,7 +96,8 @@ class SiteCrawler(object):
         # Setting default crawling delay
         self.default_delay = config["crawl_delay"]
         # Init list of pending URLs from seed URLs; every URL is checked to confirm that it can be visited
-        self.pending_urls = []
+        self.pending_urls_init = PendingURLsQueue.static_method_init
+        self.pending_urls = self.pending_urls_init()
         # Robots parser: it is initialised from the first valid seed URL found
         self.robots = SiteRobots(self.user_agent, self.default_delay, self.conn_timeout)
         #self.url_list_concurrency_lock.acquire()
@@ -286,7 +290,7 @@ class SiteCrawler(object):
                         content_type = server_response.getheader('Content-Type')
                         doc = None
                         if content_type is not None and not re.search(self.accepted_content_type, content_type):
-                            logging.info("Thread %s: %s discarded: wrong file type", threading.current_thread().name, url.get_norm_url())
+                            logging.info("Thread %s: %s discarded: wrong file type: %s", threading.current_thread().name, url.get_norm_url(), content_type)
                         else:
                             doc = WebDocument(server_response, url, self.max_attempts, self.fasttextmodel)
                         connection.close()
@@ -415,7 +419,7 @@ class SiteCrawler(object):
 
     def load_status(self, status_obj):
         self.visited = status_obj['visited']
-        self.pending_urls = []
+        self.pending_urls = self.pending_urls_init()
         for u in status_obj['pendingurls']:
             self.pending_urls.append(Link(u))
         self.attempts = status_obj['attempts']

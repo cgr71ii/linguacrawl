@@ -1,6 +1,6 @@
 import re
 import cchardet
-from .link import Link
+from linguacrawl.link import Link
 import html2text
 import pycld2 as cld2
 import pycountry

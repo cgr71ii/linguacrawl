@@ -2,8 +2,8 @@ import time
 import sys
 import threading
 from threading import Thread, Lock
-from .link import Link
-from .site_crawler import SiteCrawler
+from linguacrawl.link import Link
+from linguacrawl.site_crawler import SiteCrawler
 import logging
 import copy
 import heapq

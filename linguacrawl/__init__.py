@@ -11,7 +11,7 @@ name = "linguacrawl"
 #from .link import *
 #from .generic_scout import GenericScout
 #from .bitext_scout import *
-from .parse_config import *
+from linguacrawl.parse_config import *
 #from .web_document import *
 #from .site_robots import *
 #from .site_crawler import *
