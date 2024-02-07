@@ -6,6 +6,7 @@ import pycld2 as cld2
 import pycountry
 import logging
 from urllib.parse import urljoin, urlparse
+import random
 
 class WebDocument(object):
     def __init__(self, res, url, max_attempts=1, custom_fasttext_langid_model=None):
@@ -68,8 +69,24 @@ class WebDocument(object):
                 if not self.is_url_absolute(link):
                     # Resolve relative URL
                     extracted_links[idx] = urljoin(str(self.url), link)
-            # if shuffle_urls is False, the crawling will be breadth-first search (i.e. common approach)
-            self.links = [Link(link, self.url) for link in (extracted_links if shuffle_urls else set(extracted_links))]
+
+            if shuffle_urls:
+                extracted_links = list(set(extracted_links))
+
+                random.shuffle(extracted_links)
+            else:
+                # Crawling will be breadth-first search (i.e. common approach)
+                seen_links = set()
+                _extracted_links = []
+
+                for link in extracted_links:
+                    if link not in seen_links:
+                        _extracted_links.append(link)
+                        seen_links.add(link)
+
+                extracted_links = _extracted_links
+
+            self.links = [Link(link, self.url) for link in extracted_links]
         return self.links
 
     def get_lang(self):
