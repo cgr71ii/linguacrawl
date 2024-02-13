@@ -19,7 +19,8 @@ import ssl
 import gzip
 import threading
 
-from linguacrawl.pending_urls_queue import PendingURLsQueue
+#from linguacrawl.pending_urls_queue import PendingURLsQueue
+from linguacrawl.pending_urls_queue import *
 
 # SET THE SEED FOR REPRODUCIBILITY TESTS
 # SEED=4
@@ -59,6 +60,9 @@ class SiteCrawler(object):
         # List of regular expressions to discard URLs
         self.url_blacklist_re = config["url_blacklist"]
 
+        # Pending URLs queue scheme
+        self.pending_urls_queue_scheme = config["pending_urls_queue"]
+
         # If interrupt is set to False, crawling stops
         self.interrupt = False
         self.sleep_thread = None
@@ -96,7 +100,13 @@ class SiteCrawler(object):
         # Setting default crawling delay
         self.default_delay = config["crawl_delay"]
         # Init list of pending URLs from seed URLs; every URL is checked to confirm that it can be visited
-        self.pending_urls_init = PendingURLsQueue.static_method_init
+        if self.pending_urls_queue_scheme == "bfs":
+            self.pending_urls_init = PendingURLsQueue.static_method_init
+        elif self.pending_urls_queue_scheme == "priority_queue_language":
+            self.pending_urls_init = PendingURLsQueueLang.static_method_init
+        else:
+            raise Exception(f"Unknown scheme: {self.pending_urls_queue_scheme}")
+
         self.pending_urls = self.pending_urls_init()
         # Robots parser: it is initialised from the first valid seed URL found
         self.robots = SiteRobots(self.user_agent, self.default_delay, self.conn_timeout)
@@ -323,6 +333,8 @@ class SiteCrawler(object):
                                     # The document is writen to the warc
                                     self.write_document(doc)
                                     logging.debug("Thread %s: %s saved to disk", threading.current_thread().name, url.get_norm_url())
+
+                            self.pending_urls.document_downloaded(doc)
                     else:
                         if connection is not None:
                             connection.close()
@@ -412,17 +424,14 @@ class SiteCrawler(object):
             metadata_writer.close()
 
     def get_status_object(self):
-        targets = []
-        for u in self.pending_urls:
-            targets.append(u.get_norm_url())
-        return {'visited': self.visited, 'pendingurls': targets, 'attempts': self.attempts}
+        return self.pending_urls.get_status_object()
 
     def load_status(self, status_obj):
-        self.visited = status_obj['visited']
         self.pending_urls = self.pending_urls_init()
-        for u in status_obj['pendingurls']:
-            self.pending_urls.append(Link(u))
-        self.attempts = status_obj['attempts']
+
+        rtn = self.pending_urls.load_status(status_obj)
+        self.visited = rtn["visited"]
+        self.attempts = rtn["attempts"]
 
     def save_status(self):
         if self.dumpfile is not None:
