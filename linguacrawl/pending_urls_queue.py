@@ -51,6 +51,11 @@ class PendingURLsQueue(object):
         return {"visited": visited, "attempts": attempts}
 
     def document_downloaded(self, doc):
+        # After self.url_processed
+        pass
+
+    def url_processed(self, url):
+        # Before self.document_downloaded
         pass
 
 import os
@@ -63,9 +68,9 @@ class PendingURLsQueueLang(PendingURLsQueue):
 
     def __init__(self):
         self.pending_urls = []
-        self.seen_urls = set()
-        self.pop_urls = set()
-        self.lang_priority_urls = {}
+        self.seen_urls = set() # URLs which are or have been in the queue
+        self.processed_urls = set() # URLs which have been processed
+        self.lang_priority_urls = {} # URL -> priority = {1, 2, 3} # 1 lang is target, 2 lang is unknown, 3 lang is not target
         self.do_not_update = set()
         self.counter = 0
 
@@ -95,7 +100,7 @@ class PendingURLsQueueLang(PendingURLsQueue):
         if not isinstance(v, Link):
             raise Exception(f"Link instance was expected, but got {type(v)}")
 
-        if str(v) in self.pop_urls:
+        if str(v) in self.processed_urls:
             # URL already processed by the frontier
             return
 
@@ -116,8 +121,6 @@ class PendingURLsQueueLang(PendingURLsQueue):
 
     def pop(self):
         pop_url = heapq.heappop(self.pending_urls)
-
-        self.pop_urls.add(str(pop_url))
 
         return pop_url
 
@@ -153,3 +156,6 @@ class PendingURLsQueueLang(PendingURLsQueue):
             # append or update (if already downloaded, it will be ignored)
             self.append(doc_children_url)
             self.do_not_update.add(doc_children_url)
+
+    def url_processed(self, url):
+        self.processed_urls.add(str(url))

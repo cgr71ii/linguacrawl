@@ -294,6 +294,8 @@ class SiteCrawler(object):
                 else:
                     connection, server_response = self.connect_to_server(url)
 
+                    self.pending_urls.url_processed(url)
+
                     # If response is 2XX, the web page is processed
                     if server_response is not None and self.deal_with_response_status(url, server_response):
                         # Check content type
